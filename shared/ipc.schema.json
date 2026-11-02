@@ -1,0 +1,1 @@
+{"openapi":"3.0.0","info":{"title":"botWebScrapper IPC","version":"0.1.0"},"paths":{"/groups":{"get":{"summary":"List watched groups"}},"/keywords":{"post":{"summary":"Update keywords"}},"/logs/stream":{"get":{"summary":"Stream logs via WebSocket"}}}}

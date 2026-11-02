@@ -1,0 +1,15 @@
+{
+  "messages": 10000,
+  "offers": 10000,
+  "database_bytes": 26320808,
+  "capture_median_ms": 1.0425000000395812,
+  "capture_p95_ms": 1.916599998367019,
+  "processing_seconds": 14.745243299999856,
+  "search_median_ms": 4.9284500018984545,
+  "search_max_ms": 6.240499998966698,
+  "search_results": 3960,
+  "numeric_index_plan": [
+    "SEARCH offer_values USING COVERING INDEX values_numeric (field_id=? AND value_number<?)"
+  ],
+  "note": "Dados sintéticos temporários; não representa SLA ou latência de rede Telegram."
+}
