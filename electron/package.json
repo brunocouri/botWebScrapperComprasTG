@@ -1,7 +1,10 @@
 {
-  "name": "electron",
+  "name": "comprastg",
+  "productName": "ComprasTG",
   "private": true,
-  "version": "0.1.0",
+  "description": "Monitor de ofertas Telegram com catálogo local",
+  "author": "Bruno Couri",
+  "version": "0.1.1",
   "type": "module",
   "main": "dist-electron/electron/main.cjs",
   "scripts": {
@@ -13,7 +16,9 @@
     "preview": "vite preview",
     "build:electron": "tsc --project tsconfig.electron.json && node scripts/finalize-electron.mjs",
     "start": "cross-env COMPRAS_RENDERER_FILE=1 electron .",
-    "smoke": "electron scripts/smoke.cjs"
+    "smoke": "electron scripts/smoke.cjs",
+    "package:win": "python ../scripts/prepare_windows.py && npm run build && electron-builder --config electron-builder.json --win --x64 --publish never",
+    "smoke:packaged": "node scripts/smoke-packaged.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

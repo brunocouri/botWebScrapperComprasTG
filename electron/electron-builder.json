@@ -1,0 +1,26 @@
+{
+  "appId": "com.comprastg.desktop",
+  "productName": "ComprasTG",
+  "directories": { "output": "../artifacts/windows" },
+  "files": ["dist/**/*", "dist-electron/**/*", "!dist-electron/**/*.test.js", "package.json"],
+  "extraResources": [{ "from": "../artifacts/windows-backend", "to": "backend", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc"] }],
+  "asar": true,
+  "npmRebuild": false,
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }, { "target": "zip", "arch": ["x64"] }],
+    "artifactName": "ComprasTG-${version}-windows-${arch}.${ext}",
+    "signExecutable": false
+  },
+  "nsis": {
+    "artifactName": "ComprasTG-${version}-setup-${arch}.${ext}",
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "deleteAppDataOnUninstall": false,
+    "runAfterFinish": false
+  },
+  "publish": null
+}

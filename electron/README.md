@@ -14,6 +14,8 @@ npm run smoke verifica o build compilado em janela oculta com arquivos temporár
 
 npm run lint verifica somente fontes. Testes usam Vitest/Testing Library/happy-dom e devem ser selecionados conforme a mudança. Não usar Playwright.
 
-O contrato está em src/lib/ipc.ts. O build local requer Python e não equivale a instalador autossuficiente. Dados ficam na raiz do projeto, salvo COMPRAS_DATA_DIR apontando para outro diretório existente.
+O contrato está em src/lib/ipc.ts. O build local requer Python. Dados de desenvolvimento ficam na raiz do projeto, salvo COMPRAS_DATA_DIR.
+
+Distribuição Windows x64: `npm run package:win` gera instalador e ZIP em ../artifacts/windows, incluindo Python embutido. Requer Python 3.14 para preparar o runtime. `npm run smoke:packaged` valida o EXE sem Python/Node no PATH. No aplicativo distribuído, os dados ficam em `%APPDATA%\ComprasTG\data`.
 
 Consulte ../README.md e ../docs/IMPLEMENTACAO-MELHORIAS.md.

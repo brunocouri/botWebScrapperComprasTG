@@ -19,7 +19,9 @@ e conectado para receber postagens ao vivo.
 
 ## Abrir o aplicativo
 
-No PowerShell, para uma instalação já preparada:
+Na versão Windows, instale pelo arquivo `setup-x64.exe` e abra pelo atalho, ou extraia o ZIP completo e abra `ComprasTG.exe`. Não é necessário instalar Python ou Node.js. Configurações, sessão e bancos ficam em `%APPDATA%\ComprasTG\data` e não são removidos ao trocar os arquivos do aplicativo.
+
+No PowerShell, para uma instalação pelo código-fonte já preparada:
 
 ```powershell
 cd .\botWebScrapperComprasTG

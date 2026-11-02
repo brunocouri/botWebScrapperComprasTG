@@ -1,15 +1,20 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
+import fs from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { stripAnsi } from '../src/lib/activity'
 import { LineDecoder, parseBotEvent } from '../src/lib/protocol'
 import { ProcessController, type Operation } from '../src/lib/process'
+import { runtimePaths } from '../src/lib/runtime-paths'
 import type { BotEvent, RuntimeStatus, Rule, WatchedGroup } from '../src/lib/ipc'
 
-const BACKEND_DIR = path.resolve(__dirname, '../../..')
+const runtime = runtimePaths({ packaged: app.isPackaged, resources: process.resourcesPath,
+  source: path.resolve(__dirname, '../../..'), userData: app.getPath('userData'), data: process.env.COMPRAS_DATA_DIR })
+const BACKEND_DIR = runtime.backend
+const PYTHON = runtime.python
 const FILE_RENDERER = app.isPackaged || process.env.COMPRAS_RENDERER_FILE === '1'
-const DATA_DIR = process.env.COMPRAS_DATA_DIR || BACKEND_DIR
+const DATA_DIR = runtime.data
 const RENDERER = path.resolve(__dirname, '../../dist/index.html')
 let win: BrowserWindow | null = null
 let quitting = false
@@ -39,7 +44,7 @@ function onEvent(event: BotEvent) {
 }
 const controller = new ProcessController((operation: Operation) => {
   const args = ['bot.py', operation === 'watch' ? '--watch' : operation === 'list' ? '--list-groups' : '--authenticate', '--desktop']
-  const child = spawn('python', args, { cwd: BACKEND_DIR, windowsHide: true,
+  const child = spawn(PYTHON, args, { cwd: BACKEND_DIR, windowsHide: true,
     env: { ...process.env, COMPRAS_DATA_DIR: DATA_DIR, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } })
   const failure = (message: string) => onEvent({ type: 'error', code: 'protocol_invalid', message })
   const stdout = new LineDecoder(line => {
@@ -68,7 +73,7 @@ const controller = new ProcessController((operation: Operation) => {
 
 function config<T>(payload: Record<string, unknown>): Promise<T> {
   return new Promise((resolve, reject) => {
-    const child = spawn('python', ['config_cli.py'], { cwd: BACKEND_DIR, windowsHide: true,
+    const child = spawn(PYTHON, ['config_cli.py'], { cwd: BACKEND_DIR, windowsHide: true,
       env: { ...process.env, COMPRAS_DATA_DIR: DATA_DIR, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } })
     let output = '', size = 0, settled = false
     const fail = (message: string) => { if (!settled) { settled = true; reject(new Error(message)) } }
@@ -81,7 +86,9 @@ function config<T>(payload: Record<string, unknown>): Promise<T> {
     })
     child.stderr.resume() // nunca reenviar entrada/segredos em exceções de SDK
     child.stdin.on('error', () => {})
-    child.once('error', () => { clearTimeout(timer); fail('Python não disponível. Instale as dependências e confira o PATH.') })
+    child.once('error', () => { clearTimeout(timer); fail(app.isPackaged
+      ? 'Runtime do aplicativo indisponível. Extraia o ZIP completo ou reinstale o ComprasTG.'
+      : 'Python não disponível. Instale as dependências e confira o PATH.') })
     child.once('close', code => {
       clearTimeout(timer)
       if (settled) return
@@ -97,7 +104,7 @@ function config<T>(payload: Record<string, unknown>): Promise<T> {
 
 let workerError: string | null = null
 const workerController = new ProcessController(() => {
-  const child = spawn('python', ['etl_worker.py', '--desktop'], { cwd: BACKEND_DIR, windowsHide: true,
+  const child = spawn(PYTHON, ['etl_worker.py', '--desktop'], { cwd: BACKEND_DIR, windowsHide: true,
     env: { ...process.env, COMPRAS_DATA_DIR: DATA_DIR, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } })
   const decoder = new LineDecoder(line => {
     try {
@@ -171,7 +178,7 @@ handle('shell:openExternal', async (url: unknown) => {
 
 function createWindow() {
   win = new BrowserWindow({ width: 1100, height: 760, minWidth: 640, minHeight: 480,
-    show: !(process.env.COMPRAS_SMOKE === '1' && process.env.COMPRAS_DATA_DIR), backgroundColor: '#0B0B0F', title: 'ComprasTG',
+    show: !(process.env.COMPRAS_SMOKE === '1' && (process.env.COMPRAS_DATA_DIR || app.commandLine.hasSwitch('user-data-dir'))), backgroundColor: '#0B0B0F', title: 'ComprasTG',
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } })
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   win.webContents.on('will-navigate', event => event.preventDefault())
@@ -187,7 +194,17 @@ function createWindow() {
   if (FILE_RENDERER) void win.loadFile(RENDERER)
   else void win.loadURL('http://localhost:5173')
 }
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true })
+    if (app.isPackaged && !fs.existsSync(PYTHON)) throw new Error('Runtime ausente')
+  } catch {
+    dialog.showErrorBox('Não foi possível abrir o ComprasTG', 'Confira a permissão da pasta de dados e extraia o ZIP completo ou reinstale o aplicativo.')
+    app.exit(1)
+    return
+  }
+  createWindow()
+})
 app.on('window-all-closed', () => app.quit())
 app.on('before-quit', event => {
   if (!controller.busy && !workerController.busy) return

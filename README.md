@@ -6,7 +6,16 @@ Inclui regras por preço e prioridade, simulador sem envio, atividade em tempo r
 
 ## Download
 
-Baixe `ComprasTG-v0.1.0-source.zip` em [Releases](https://github.com/brunocouri/botWebScrapperComprasTG/releases) e extraia em uma pasta. A release distribui código-fonte: requer Python e Node.js instalados e não inclui instalador nem executável autossuficiente.
+Em [Releases](https://github.com/brunocouri/botWebScrapperComprasTG/releases/latest), escolha uma das versões para **Windows 10/11 x64**:
+
+- **Instalador:** baixe `ComprasTG-0.1.1-setup-x64.exe`, execute e abra o ComprasTG pelo atalho criado.
+- **ZIP com executável:** baixe `ComprasTG-0.1.1-windows-x64.zip`, extraia a pasta inteira e abra `ComprasTG.exe`. Mantenha os arquivos e a pasta `resources` ao lado do EXE.
+
+Ambos incluem Python, Node/Electron e dependências. Não é necessário instalar ferramentas de desenvolvimento. A primeira configuração da conta é feita na interface, conforme os passos abaixo.
+
+Configurações, sessão e bancos ficam em `%APPDATA%\ComprasTG\data`, separados da instalação. O ZIP usa essa mesma pasta de dados; não é uma instalação com dados portáteis. Nenhum dado pessoal acompanha o download. Os binários desta versão não têm assinatura digital.
+
+`SHA256SUMS.txt` na release permite conferir a integridade dos arquivos. Para compilar ou executar pelo código-fonte, siga a seção abaixo.
 
 Também é possível clonar:
 
@@ -15,7 +24,7 @@ git clone https://github.com/brunocouri/botWebScrapperComprasTG.git
 cd botWebScrapperComprasTG
 ```
 
-## Instalar e abrir
+## Executar pelo código-fonte
 
 Requer Python e Node.js no PATH. Ambiente validado: Python 3.14.5, Telethon 1.40.0, Electron 44.10.0.
 
@@ -74,6 +83,7 @@ O comando de parada solicita encerramento apenas deste monitor headless, sem mat
 - Preço ambíguo é filtrado nas regras com faixa; sem faixa, o matching por termo é preservado. A associação é conservadora, sem classificação semântica de produtos.
 - Deduplicação ocorre antes do envio. Queda entre marcação e envio pode perder um alerta; essa escolha evita duplicatas no replay.
 - Dados padrão na raiz: `.env`, `session.session`, `keywords.json`, `watched_groups.json`, `seen.db` e `logs/`. `COMPRAS_DATA_DIR` permite outro diretório existente; não há migração automática de dados.
+- Na versão Windows distribuída, esses dados ficam em `%APPDATA%\ComprasTG\data`. Dados de uma instalação pelo código-fonte não são importados automaticamente.
 - Credenciais, sessão, listas pessoais, bancos e backups ficam fora do Git e da release. A sessão permite acesso à conta: não compartilhe esses arquivos. Faça backup dos dados com monitor e processamento parados.
 - `bot.lock` permanece no disco. Exclusividade depende do lock do SO, não da existência do arquivo. Não apague locks durante operações.
 - JSON inválido e conflito de revisão geram erro, preservando dados. Keywords legadas migram com backup e IDs estáveis.
@@ -93,6 +103,8 @@ npm run lint
 O smoke abre o build em janela oculta com diretório temporário e verifica renderer, preload, IPC, configuração e simulador Python. Não autentica nem envia ao Telegram.
 
 Use pytest/Vitest com seleção dos arquivos afetados. Testes Python isolam dados via conftest. Não usar Playwright. Este workspace não possui artisan; a limpeza de configuração Laravel é inaplicável.
+
+Para gerar instalador e ZIP Windows x64, use Python 3.14 no ambiente de build e, em `electron/`, execute `npm run package:win`. O script baixa o Python embutido com SHA256 fixado, instala dependências e copia apenas fontes autorizadas. `npm run smoke:packaged` valida o EXE gerado com dados temporários e PATH sem Python/Node. Contrato: [distribuição Windows](docs/SPEC-DISTRIBUICAO.md).
 
 Contrato: `electron/src/lib/ipc.ts`. Documentos: [arquitetura](docs/ARCHITECTURE.md), [preços](docs/SPEC-PRECO.md), [plano](docs/PLANO-MELHORIAS.md) e [implementação/validação](docs/IMPLEMENTACAO-MELHORIAS.md).
 
